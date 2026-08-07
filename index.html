@@ -3,96 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bug Pilot</title>
-
-    <!-- Google Font -->
+    <title>BugPilot — AI Powered Bug Tracking</title>
+    <meta name="description" content="Detect, reproduce and resolve software bugs using intelligent AI agents.">
+    <link rel="icon" type="image/x-icon" href="/assets/logo.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/x-icon" href="assets/logo.svg">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-
-    <!-- ================= NAVBAR ================= -->
-
-    <nav class="header">
-
-        <h2 class="logo">BugPilot</h2>
-
-        <ul class="nav-links">
-
-            <li><a class="active" href="#">Home</a></li>
-
-            <li><a href="#">How it Works</a></li>
-
-            <li><a href="#">Features</a></li>
-
-            <li><a href="login.html">Login</a></li>
-
-            <li>
-                <a href="signup.html" class="signup-btn">
-                    Get Started
-                </a>
-            </li>
-
-            <li>
-                <button id="theme-toggle-btn">
-                    <img src="assets/light-mode.png" alt="light mode" class="light-mode-icon">
-                    <img src="assets/dark-mode.png" alt="dark mode" class="dark-mode-icon">
-                </button>
-            </li>
-
-        </ul>
-
-    </nav>
-
-
-    <section class="hero-section">
-
-        <div class="hero-content">
-
-            <h1 class="hero-title">
-                AI Powered
-                <span>Bug Tracking</span>
-            </h1>
-
-            <p class="hero-description">
-
-                Detect, reproduce and resolve software bugs
-                using intelligent AI agents.
-
-                BugPilot automatically analyzes issues,
-                creates reports and helps your developers
-                fix problems faster.
-
-            </p>
-
-            <div class="hero-buttons">
-
-                <a href="signup.html" class="btn-primary">
-                    Get Started
-                </a>
-
-                <a href="#" class="btn-secondary">
-                    Learn More
-                </a>
-
-            </div>
-
-        </div>
-
-        <div class="hero-image-container">
-
-            <img
-                src="assets/hero.png"
-                alt="Hero"
-                class="hero-image">
-
-        </div>
-
-    </section>
-
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
 </body>
-<script src="script.js"></script>
 </html>
