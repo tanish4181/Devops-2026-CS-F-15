@@ -34,11 +34,9 @@ export default function Navbar() {
 
         {user ? (
           <>
-            <Link to="/admin" className="btn primary">
-              Console
-            </Link>
+            <span className="user-email">{user.email}</span>
             <button className="btn ghost" onClick={handleLogout}>
-              Sign out
+              Logout
             </button>
           </>
         ) : (
