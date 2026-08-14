@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { getSession, isAdmin, grantAdmin } from "../lib/auth";
 import {
-  BugType, Severity, Priority, FeedbackForm,
+  BugType, Severity, FeedbackForm,
   loadForms, saveForms,
 } from "../lib/forms";
 
