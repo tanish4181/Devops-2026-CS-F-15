@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { getSession, isAdmin, grantAdmin } from "../lib/auth";
 import {
-  BugType, Severity, FeedbackForm,
+  BugType, Severity, Priority, FeedbackForm,
   loadForms, saveForms,
 } from "../lib/forms";
 
@@ -14,8 +14,13 @@ const emptyForm: Omit<FeedbackForm, "id" | "createdAt"> = {
   description: "",
   bugType: "UI",
   severity: "Medium",
+  priority: "P2",
+  status: "Open",
   assignee: "",
+  reporter: "",
+  environment: "",
   tags: [],
+  updatedAt: new Date().toISOString(),
 };
 
 export default function Admin() {
