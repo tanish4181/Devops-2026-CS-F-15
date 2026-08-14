@@ -29,7 +29,7 @@ export default function Navbar() {
 
       <div className="nav-actions">
         <button className="icon-btn" onClick={toggle} title="Toggle theme" aria-label="Toggle theme">
-          {dark ? "☀️" : "🌙"}
+          {dark ? <i className="fa-solid fa-sun"></i> : <i className="fa-solid fa-moon"></i>}
         </button>
 
         {user ? (
