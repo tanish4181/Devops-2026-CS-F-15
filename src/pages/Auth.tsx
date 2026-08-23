@@ -176,7 +176,7 @@ export default function Auth() {
               {mode === "login" ? "Sign up" : "Log in"}
             </button>
             <br />
-            Admin access is limited to authorized accounts.
+            Sign in to access the BugPilot console and all features.
           </p>
         </div>
       </div>

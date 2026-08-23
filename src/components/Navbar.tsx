@@ -41,7 +41,7 @@ export default function Navbar() {
           </>
         ) : (
           <Link to="/auth" className="btn ghost">
-            Admin login
+            Log in
           </Link>
         )}
       </div>

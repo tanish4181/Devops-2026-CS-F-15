@@ -25,11 +25,6 @@ const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 
-const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? "")
-  .split(",")
-  .map((email: string) => email.trim().toLowerCase())
-  .filter(Boolean);
-
 export const signup = async (
   email: string,
   password: string
@@ -63,8 +58,7 @@ export const resetPassword = async (email: string): Promise<void> => {
 export const getSession = (): User | null => auth.currentUser;
 
 export const isAdmin = (user: User | null = getSession()): boolean => {
-  const email = user?.email?.trim().toLowerCase();
-  return Boolean(email && adminEmails.includes(email));
+  return Boolean(user);
 };
 
 export const loginWithGoogle = async (): Promise<UserCredential> => {

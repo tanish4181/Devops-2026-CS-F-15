@@ -37,7 +37,7 @@ export default function Landing() {
             Try the console
           </Link>
         </div>
-        <p className="hero-note">View a live demo of the admin console</p>
+        <p className="hero-note">Sign in to open your BugPilot console</p>
       </section>
 
       <section id="features" className="features">
@@ -55,7 +55,7 @@ export default function Landing() {
         <h2>Have a project to track?</h2>
         <div className="hero-cta">
           <Link to="/auth" className="btn primary lg">
-            Admin login
+            Log in to BugPilot
           </Link>
         </div>
       </section>
