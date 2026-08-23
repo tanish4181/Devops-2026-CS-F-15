@@ -4,6 +4,8 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   sendPasswordResetEmail,
   signOut,
 } from "firebase/auth";
@@ -63,4 +65,8 @@ export const getSession = (): User | null => auth.currentUser;
 export const isAdmin = (user: User | null = getSession()): boolean => {
   const email = user?.email?.trim().toLowerCase();
   return Boolean(email && adminEmails.includes(email));
+};
+
+export const loginWithGoogle = async (): Promise<UserCredential> => {
+  return await signInWithPopup(auth, new GoogleAuthProvider());
 };

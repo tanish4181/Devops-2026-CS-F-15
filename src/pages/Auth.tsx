@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { login, getSession, isAdmin, logout, resetPassword, signup } from "../lib/auth";
+import { login, loginWithGoogle, getSession, isAdmin, resetPassword, signup } from "../lib/auth";
 
 type Mode = "login" | "signup";
 
@@ -40,6 +40,33 @@ export default function Auth() {
     }
   };
 
+  const finishLogin = (user: Awaited<ReturnType<typeof login>>["user"]) => {
+    navigate(isAdmin(user) ? "/admin" : "/", { replace: true });
+  };
+
+  const handleGoogleLogin = async () => {
+    setMessage("");
+    try {
+      const result = await loginWithGoogle();
+      finishLogin(result.user);
+    } catch (error) {
+      const code = typeof error === "object" && error !== null && "code" in error
+        ? String(error.code)
+        : "";
+      if (code === "auth/operation-not-allowed") {
+        setMessage("Google sign-in is not enabled for this Firebase project. Enable Google under Firebase Console > Authentication > Sign-in method.");
+      } else if (code === "auth/unauthorized-domain") {
+        setMessage("This website address is not authorized in Firebase. Add localhost under Firebase Console > Authentication > Settings > Authorized domains.");
+      } else if (code === "auth/popup-blocked") {
+        setMessage("Your browser blocked the Google sign-in window. Allow pop-ups for this website and try again.");
+      } else if (code === "auth/popup-closed-by-user") {
+        setMessage("Google sign-in was cancelled.");
+      } else {
+        setMessage("Google sign-in could not be completed. Please try again or use email and password.");
+      }
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
@@ -48,12 +75,7 @@ export default function Auth() {
         ? await signup(email, password)
         : await login(email, password);
 
-      if (isAdmin(result.user)) {
-        navigate("/admin", { replace: true });
-      } else {
-        await logout();
-        setMessage("Your account is not authorized for the admin console. Please contact an administrator.");
-      }
+      finishLogin(result.user);
     } catch (error) {
       const code = typeof error === "object" && error !== null && "code" in error
         ? String(error.code)
@@ -141,6 +163,12 @@ export default function Auth() {
               {mode === "login" ? "Log in" : "Create account"}
             </button>
           </form>
+
+          <div className="auth-divider"><span>or continue with</span></div>
+          <button className="btn google-btn lg block" type="button" onClick={handleGoogleLogin}>
+            <span className="google-mark" aria-hidden>G</span>
+            Continue with Google
+          </button>
 
           <p className="auth-foot">
             {mode === "login" ? "No account yet? " : "Already have an account? "}
