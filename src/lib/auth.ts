@@ -1,55 +1,66 @@
-export interface User {
-  name: string;
-  email: string;
-  password: string;
-  createdAt: string;
-}
+import { initializeApp } from "firebase/app";
 
-const USERS_KEY = "bugpilot-users";
-const SESSION_KEY = "bugpilot-session";
-const ADMIN_KEY = "bugpilot-admin";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut,
+} from "firebase/auth";
+import type { User, UserCredential } from "firebase/auth";
 
-export function getUsers(): User[] {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_KEY) || "[]") as User[];
-  } catch {
-    return [];
-  }
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyDhQPGu9KMHmds9BkLg9kDCDFIrRn_rh3Q",
+  authDomain: "bugpilot-197cc.firebaseapp.com",
+  projectId: "bugpilot-197cc",
+  storageBucket: "bugpilot-197cc.firebasestorage.app",
+  messagingSenderId: "452646893068",
+  appId: "1:452646893068:web:8cc5dd11738c31af9aa029",
+  measurementId: "G-M2X2N56SER"
+};
 
-export function getSession(): User | null {
-  try {
-    return JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-  } catch {
-    return null;
-  }
-}
+const app = initializeApp(firebaseConfig);
 
-export function register(name: string, email: string, password: string): User {
-  const user: User = { name, email, password, createdAt: new Date().toISOString() };
-  const users = getUsers().filter((u) => u.email !== email);
-  users.push(user);
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-  return user;
-}
+export const auth = getAuth(app);
 
-export function login(email: string, password: string): User {
-  const existing = getUsers().find((u) => u.email === email && u.password === password);
-  const user: User =
-    existing ?? { name: email.split("@")[0] || "User", email, password, createdAt: new Date().toISOString() };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-  return user;
-}
+const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS ?? "")
+  .split(",")
+  .map((email: string) => email.trim().toLowerCase())
+  .filter(Boolean);
 
-export function logout() {
-  localStorage.removeItem(SESSION_KEY);
-}
+export const signup = async (
+  email: string,
+  password: string
+): Promise<UserCredential> => {
+  return await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password
+  );
+};
 
-export function isAdmin(): boolean {
-  return localStorage.getItem(ADMIN_KEY) === "granted";
-}
+export const login = async (
+  email: string,
+  password: string
+): Promise<UserCredential> => {
+  return await signInWithEmailAndPassword(
+    auth,
+    email,
+    password
+  );
+};
 
-export function grantAdmin() {
-  localStorage.setItem(ADMIN_KEY, "granted");
-}
+export const logout = async () => {
+  return await signOut(auth);
+};
+
+export const resetPassword = async (email: string): Promise<void> => {
+  await sendPasswordResetEmail(auth, email);
+};
+
+export const getSession = (): User | null => auth.currentUser;
+
+export const isAdmin = (user: User | null = getSession()): boolean => {
+  const email = user?.email?.trim().toLowerCase();
+  return Boolean(email && adminEmails.includes(email));
+};
