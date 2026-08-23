@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { register, login, getSession } from "../lib/auth";
+import { login, getSession, isAdmin, logout, resetPassword, signup } from "../lib/auth";
 
 type Mode = "login" | "signup";
 
@@ -12,22 +12,63 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (getSession()) navigate("/admin");
+    const user = getSession();
+    if (user && isAdmin(user)) navigate("/admin", { replace: true });
   }, [navigate]);
 
   const switchMode = (m: Mode) => {
     setMode(m);
+    setMessage("");
     navigate(`/auth?mode=${m}`, { replace: true });
   };
 
-  const submit = (e: React.FormEvent) => {
+  const handlePasswordReset = async () => {
+    if (!email.trim()) {
+      setMessage("Enter your email address first, then select Forgot password?.");
+      return;
+    }
+
+    try {
+      await resetPassword(email.trim());
+      setMessage("If an account exists for this email, a password-reset link has been sent.");
+    } catch {
+      setMessage("We could not send the password-reset email. Please verify the email address and try again.");
+    }
+  };
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === "signup") register(name, email, password);
-    else login(email, password);
-    navigate("/admin");
+    setMessage("");
+    try {
+      const result = mode === "signup"
+        ? await signup(email, password)
+        : await login(email, password);
+
+      if (isAdmin(result.user)) {
+        navigate("/admin", { replace: true });
+      } else {
+        await logout();
+        setMessage("Your account is not authorized for the admin console. Please contact an administrator.");
+      }
+    } catch (error) {
+      const code = typeof error === "object" && error !== null && "code" in error
+        ? String(error.code)
+        : "";
+
+      if (code === "auth/email-already-in-use") {
+        setMode("login");
+        navigate("/auth?mode=login", { replace: true });
+        setMessage("This email is already registered. Please use the Login tab to access your account.");
+      } else if (code === "auth/invalid-credential") {
+        setMessage("We could not sign you in with those details. Please check your email and password and try again.");
+      } else {
+        setMessage(error instanceof Error ? error.message : "We could not complete your request. Please try again.");
+      }
+    }
   };
 
   return (
@@ -63,6 +104,8 @@ export default function Auth() {
             </button>
           </div>
 
+          {message && <p className="auth-message" role="alert">{message}</p>}
+
           <form className="auth-form" onSubmit={submit}>
             {mode === "signup" && (
               <label>
@@ -88,7 +131,7 @@ export default function Auth() {
                 <label className="check">
                   <input type="checkbox" defaultChecked /> Remember me
                 </label>
-                <button type="button" className="linkish" onClick={() => alert("Password reset coming soon.")}>
+                <button type="button" className="linkish" onClick={handlePasswordReset}>
                   Forgot password?
                 </button>
               </div>
@@ -105,7 +148,7 @@ export default function Auth() {
               {mode === "login" ? "Sign up" : "Log in"}
             </button>
             <br />
-            Authentication is a demo. Any credentials will let you in.
+            Admin access is limited to authorized accounts.
           </p>
         </div>
       </div>

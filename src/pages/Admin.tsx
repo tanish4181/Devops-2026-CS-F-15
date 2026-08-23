@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getSession, isAdmin, grantAdmin } from "../lib/auth";
+import { auth, isAdmin } from "../lib/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import type { User } from "firebase/auth";
 import {
   BugType, Severity, FeedbackForm,
   loadForms, saveForms,
@@ -24,32 +26,27 @@ const emptyForm: Omit<FeedbackForm, "id" | "createdAt"> = {
 };
 
 export default function Admin() {
-  const [entered, setEntered] = useState(false);
+  const [user, setUser] = useState<User | null | undefined>(undefined);
 
-  if (!isAdmin() && !entered && !getSession()) {
+  useEffect(() => onAuthStateChanged(auth, setUser), []);
+
+  useEffect(() => {
+    if (user !== undefined && !isAdmin(user)) {
+      window.location.replace("/auth");
+    }
+  }, [user]);
+
+  if (user === undefined) {
+    return <div className="gate"><p>Checking admin access...</p></div>;
+  }
+
+  if (!isAdmin(user)) {
     return (
       <div className="gate">
         <span className="logo-mark">◈</span>
         <h1>Admin console</h1>
-        <p>
-          Enter any access code to continue. This is a demo gate. There is no
-          real authentication yet.
-        </p>
-        <form
-          className="gate-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const v = (new FormData(e.currentTarget).get("code") as string).trim();
-            if (v) {
-              grantAdmin();
-              setEntered(true);
-            }
-          }}
-        >
-          <input name="code" placeholder="Type any access code…" autoFocus required />
-          <button className="btn primary" type="submit">Enter console</button>
-        </form>
-        <Link to="/" className="linkish">← Back to home</Link>
+        <p>Your account is not authorized to access this console.</p>
+        <Link to="/" className="linkish">Back to home</Link>
       </div>
     );
   }
