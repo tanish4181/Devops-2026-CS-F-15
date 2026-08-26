@@ -1,7 +1,10 @@
 import { Routes, Route } from "react-router-dom";
-import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+
+function Landing() {
+  return null;
+}
 
 export default function App() {
   return (
