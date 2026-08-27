@@ -324,45 +324,12 @@ textarea {
 
 .auth-page {
   min-height: 100vh;
-  display: grid;
+  display: flex;
+  justify-content: center;
   grid-template-columns: 1fr 1fr;
 }
 
-.auth-art {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 48px;
-  background: var(--surface-2);
-  border-right: 1px solid var(--border);
-}
 
-.art-quote {
-  max-width: 380px;
-}
-
-.art-quote .logo-mark {
-  font-size: 26px;
-}
-
-.art-quote h2 {
-  font-size: 26px;
-  letter-spacing: -0.03em;
-  margin: 12px 0 20px;
-}
-
-.art-quote p {
-  font-size: 17px;
-  color: var(--text-soft);
-  line-height: 1.7;
-}
-
-.art-author {
-  display: inline-block;
-  margin-top: 18px;
-  font-size: 14px;
-  color: var(--faint);
-}
 
 .auth-panel {
   display: flex;
