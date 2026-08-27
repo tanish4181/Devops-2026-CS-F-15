@@ -95,17 +95,8 @@ export default function Auth() {
 
   return (
     <div className="auth-page">
-      <div className="auth-art" aria-hidden>
-        <div className="art-quote">
-          <span className="logo-mark">◈</span>
-          <h2>BugPilot</h2>
-          <p>
-            “We cut our bug triage time by 80%. BugPilot finds the root cause
-            before our coffee gets cold.”
-          </p>
-          <span className="art-author">Priya, Engineering Lead</span>
-        </div>
-      </div>
+     
+      
 
       <div className="auth-panel">
         <Link to="/" className="auth-back">← Back to home</Link>
