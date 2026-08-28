@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { login, loginWithGoogle, getSession, isAdmin, resetPassword, signup } from "../lib/auth";
+import { auth, login, loginWithGoogle, isAdmin, resetPassword, signup } from "../lib/auth";
+import { onAuthStateChanged } from "firebase/auth";
 
 type Mode = "login" | "signup";
 
@@ -14,11 +15,13 @@ export default function Auth() {
   const [showPw, setShowPw] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const redirectTarget = searchParams.get("redirect") === "/admin" ? "/admin" : "/";
 
   useEffect(() => {
-    const user = getSession();
-    if (user && isAdmin(user)) navigate("/admin", { replace: true });
-  }, [navigate]);
+    return onAuthStateChanged(auth, (user) => {
+      if (user && isAdmin(user)) navigate(redirectTarget, { replace: true });
+    });
+  }, [navigate, redirectTarget]);
 
   const switchMode = (m: Mode) => {
     setMode(m);
@@ -41,7 +44,7 @@ export default function Auth() {
   };
 
   const finishLogin = (user: Awaited<ReturnType<typeof login>>["user"]) => {
-    navigate(isAdmin(user) ? "/admin" : "/", { replace: true });
+    navigate(isAdmin(user) ? redirectTarget : "/", { replace: true });
   };
 
   const handleGoogleLogin = async () => {
