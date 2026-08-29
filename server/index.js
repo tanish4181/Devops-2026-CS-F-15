@@ -23,6 +23,11 @@ const allowedOrigins = [
   "http://127.0.0.1:5175",
 ];
 
+if (process.env.ALLOWED_ORIGINS) {
+  const extraOrigins = process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim());
+  allowedOrigins.push(...extraOrigins);
+}
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -51,24 +56,26 @@ app.use("/api/feedback/:formId", (req, res, next) => {
   next();
 });
 
-async function start() {
-  if (!MONGODB_URI) {
-    console.warn("MONGODB_URI not set. Starting server without database.");
-  } else {
-    try {
-      await mongoose.connect(MONGODB_URI, { dbName: "bugpilot" });
-      console.log("Connected to MongoDB → database: bugpilot");
-    } catch (err) {
+// Connect to MongoDB immediately
+if (MONGODB_URI) {
+  mongoose
+    .connect(MONGODB_URI, { dbName: "bugpilot" })
+    .then(() => console.log("Connected to MongoDB → database: bugpilot"))
+    .catch((err) =>
       console.warn(
         "MongoDB connection failed. Starting server without database. " +
           err.message
-      );
-    }
-  }
+      )
+    );
+} else {
+  console.warn("MONGODB_URI not set. Starting server without database.");
+}
 
+// Only start the listener if not running in Vercel environment
+if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`BugPilot server running on http://localhost:${PORT}`);
   });
 }
 
-start();
+export default app;
