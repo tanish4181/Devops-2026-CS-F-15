@@ -2,9 +2,16 @@ import { auth } from "./auth";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
-function getUserId(): string | null {
+function getUserId(): string {
   const user = auth.currentUser;
-  return user ? user.uid : null;
+  if (user) return user.uid;
+
+  let devId = localStorage.getItem("bugpilot-dev-user-id");
+  if (!devId) {
+    devId = "dev-" + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem("bugpilot-dev-user-id", devId);
+  }
+  return devId;
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -14,9 +21,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...((options?.headers as Record<string, string>) || {}),
   };
 
-  if (userId) {
-    headers["X-User-Id"] = userId;
-  }
+  headers["X-User-Id"] = userId;
 
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
