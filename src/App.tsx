@@ -1,8 +1,42 @@
-import { Routes, Route } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
+import AdminLayout from "./pages/admin/AdminLayout";
+import FeedbackForms from "./pages/admin/FeedbackForms";
+import BugDashboard from "./pages/admin/BugDashboard";
+import Submissions from "./pages/admin/Submissions";
+import Analytics from "./pages/admin/Analytics";
+import FeedbackFormPage from "./pages/FeedbackFormPage";
 import Landing from "./pages/Landing";
+import { auth } from "./lib/auth";
 import { ThemeProvider } from "./lib/theme";
+
+function ProtectedRoute() {
+  const [user, setUser] = useState(auth.currentUser);
+  const [loading, setLoading] = useState(!auth.currentUser);
+
+  useEffect(() => {
+    return onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="gate">
+        <p>Checking access...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth?redirect=%2Fadmin" replace />;
+  }
+
+  return <AdminLayout />;
+}
 
 export default function App() {
   return (
@@ -10,8 +44,15 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="*" element={<Landing />} />
+        <Route path="/feedback/:formId" element={<FeedbackFormPage />} />
+        <Route path="/admin" element={<ProtectedRoute />}>
+          <Route index element={<Navigate to="/admin/forms" replace />} />
+          <Route path="forms" element={<FeedbackForms />} />
+          <Route path="bugs" element={<BugDashboard />} />
+          <Route path="submissions" element={<Submissions />} />
+          <Route path="analytics" element={<Analytics />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ThemeProvider>
   );

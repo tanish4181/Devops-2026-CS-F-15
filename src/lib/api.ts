@@ -1,0 +1,181 @@
+import { auth } from "./auth";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+
+function getUserId(): string | null {
+  const user = auth.currentUser;
+  return user ? user.uid : null;
+}
+
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const userId = getUserId();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((options?.headers as Record<string, string>) || {}),
+  };
+
+  if (userId) {
+    headers["X-User-Id"] = userId;
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `Request failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export interface BugFilters {
+  status?: string;
+  severity?: string;
+  priority?: string;
+  bugType?: string;
+  search?: string;
+}
+
+export interface CreateBugPayload {
+  title: string;
+  description?: string;
+  bugType?: string;
+  severity?: string;
+  priority?: string;
+  assignee?: string;
+  reporter?: string;
+  environment?: string;
+  tags?: string[];
+}
+
+export interface SubmitFeedbackPayload {
+  bugDescription: string;
+  stepsToReproduce?: string;
+  environment?: string;
+  reporterEmail?: string;
+}
+
+export interface PublicForm {
+  formId: string;
+  title: string;
+  description: string;
+  bugType: string;
+  severity: string;
+}
+
+export interface Bug {
+  _id: string;
+  formId: string;
+  title: string;
+  description: string;
+  bugType: string;
+  severity: string;
+  priority: string;
+  status: string;
+  assignee: string;
+  reporter: string;
+  environment: string;
+  tags: string[];
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Submission {
+  _id: string;
+  formId: { formId: string; title: string } | string;
+  formTitle: string;
+  bugDescription: string;
+  stepsToReproduce: string;
+  environment: string;
+  reporterEmail: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface Stats {
+  overview: {
+    totalBugs: number;
+    openBugs: number;
+    inProgressBugs: number;
+    criticalBugs: number;
+    totalSubmissions: number;
+    acceptanceRate: number;
+  };
+  bugsByStatus: Record<string, number>;
+  bugsBySeverity: Record<string, number>;
+  bugsByType: Record<string, number>;
+  bugsByPriority: Record<string, number>;
+  submissionsByStatus: Record<string, number>;
+}
+
+export async function getBugs(filters?: BugFilters): Promise<Bug[]> {
+  const params = new URLSearchParams();
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.severity) params.set("severity", filters.severity);
+  if (filters?.priority) params.set("priority", filters.priority);
+  if (filters?.bugType) params.set("bugType", filters.bugType);
+  if (filters?.search) params.set("search", filters.search);
+
+  const query = params.toString();
+  return request<Bug[]>(`/bugs${query ? `?${query}` : ""}`);
+}
+
+export async function createBug(data: CreateBugPayload): Promise<Bug> {
+  return request<Bug>("/bugs", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateBug(
+  formId: string,
+  data: Partial<Bug>
+): Promise<Bug> {
+  return request<Bug>(`/bugs/${formId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteBug(formId: string): Promise<void> {
+  await request(`/bugs/${formId}`, { method: "DELETE" });
+}
+
+export async function getPublicForm(formId: string): Promise<PublicForm> {
+  return request<PublicForm>(`/bugs/public/${formId}`);
+}
+
+export async function submitFeedback(
+  formId: string,
+  data: SubmitFeedbackPayload
+): Promise<{ message: string; id: string }> {
+  return request(`/bugs/public/${formId}/submit`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getSubmissions(
+  status?: string
+): Promise<Submission[]> {
+  const query = status ? `?status=${status}` : "";
+  return request<Submission[]>(`/submissions${query}`);
+}
+
+export async function updateSubmission(
+  id: string,
+  status: string
+): Promise<Submission> {
+  return request<Submission>(`/submissions/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function getStats(): Promise<Stats> {
+  return request<Stats>("/stats");
+}

@@ -33,7 +33,7 @@ export default function Landing() {
           so your developers ship what matters.
         </p>
         <div className="hero-cta">
-          <Link to="/admin" className="btn primary lg">
+          <Link to="/auth?redirect=%2Fadmin" className="btn primary lg">
             Try the console
           </Link>
         </div>
