@@ -32,8 +32,8 @@ async function start() {
     if (!MONGODB_URI) {
       console.warn("MONGODB_URI not set. Running without database.");
     } else {
-      await mongoose.connect(MONGODB_URI);
-      console.log("Connected to MongoDB");
+      await mongoose.connect(MONGODB_URI, { dbName: "bugpilot" });
+      console.log("Connected to MongoDB → database: bugpilot");
     }
 
     app.listen(PORT, () => {
