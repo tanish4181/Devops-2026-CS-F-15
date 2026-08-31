@@ -10,6 +10,7 @@ import mongoose from "mongoose";
 import bugsRouter from "./routes/bugs.js";
 import submissionsRouter from "./routes/submissions.js";
 import statsRouter from "./routes/stats.js";
+import settingsRouter from "./routes/settings.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,6 +52,8 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/bugs", bugsRouter);
 app.use("/api/submissions", submissionsRouter);
 app.use("/api/stats", statsRouter);
+app.use("/api/settings", settingsRouter);
+
 
 app.use("/api/feedback/:formId", (req, res, next) => {
   req.params.formId;

@@ -79,7 +79,17 @@ export default function AdminLayout() {
               <i className="fa-solid fa-chart-bar"></i>
               Analytics
             </NavLink>
+            <NavLink
+              to="/admin/settings"
+              className={({ isActive }) =>
+                `admin-tab ${isActive ? "on" : ""}`
+              }
+            >
+              <i className="fa-solid fa-gear"></i>
+              Settings
+            </NavLink>
           </nav>
+
         </aside>
 
         <main className="admin-main">
