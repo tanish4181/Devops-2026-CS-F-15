@@ -12,13 +12,13 @@ import {
 import type { User, UserCredential } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDhQPGu9KMHmds9BkLg9kDCDFIrRn_rh3Q",
-  authDomain: "bugpilot-197cc.firebaseapp.com",
-  projectId: "bugpilot-197cc",
-  storageBucket: "bugpilot-197cc.firebasestorage.app",
-  messagingSenderId: "452646893068",
-  appId: "1:452646893068:web:8cc5dd11738c31af9aa029",
-  measurementId: "G-M2X2N56SER"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
