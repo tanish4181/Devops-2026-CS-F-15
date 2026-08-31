@@ -52,6 +52,20 @@ export default function FeedbackFormPage() {
     }
   };
 
+  // Local state for Severity selection
+  const [severity, setSeverity] = useState(form?.severity || "Medium");
+  const [bugTitle, setBugTitle] = useState("");
+
+  // Sync default severity when form loads
+  useEffect(() => {
+    if (form?.severity) {
+      setSeverity(form.severity);
+    }
+    if (form?.title) {
+      setBugTitle(form.title);
+    }
+  }, [form]);
+
   if (state === "loading") {
     return (
       <div className="gate">
@@ -93,78 +107,161 @@ export default function FeedbackFormPage() {
   }
 
   return (
-    <div className="gate">
-      <Link to="/" className="auth-back">
-        ← BugPilot
-      </Link>
-
-      <div className="gate-card">
-        <span className="eyebrow">Bug Report</span>
-        <h1>{form?.title}</h1>
-        {form?.description && <p>{form.description}</p>}
-
-        <div className="fi-meta" style={{ marginBottom: "20px" }}>
-          {form?.bugType && (
-            <span className="badge badge-type">{form.bugType}</span>
-          )}
-          {form?.severity && (
-            <span className={`badge sev-${form.severity.toLowerCase()}`}>
-              {form.severity}
-            </span>
-          )}
+    <div className="saas-container">
+      <div className="saas-card">
+        <div className="saas-header">
+          <span className="saas-badge">BUG REPORT</span>
+          <h1 className="saas-title">Submit a bug report</h1>
+          <p className="saas-subtitle">
+            Help us squash bugs by providing clear and detailed information.
+          </p>
         </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            <span>Describe the bug *</span>
-            <textarea
-              rows={4}
-              value={bugDescription}
-              onChange={(e) => setBugDescription(e.target.value)}
-              placeholder="What happened? What did you expect to happen?"
-              required
-            />
-          </label>
-          <label>
-            <span>Steps to reproduce</span>
-            <textarea
-              rows={3}
-              value={stepsToReproduce}
-              onChange={(e) => setStepsToReproduce(e.target.value)}
-              placeholder="1. Go to... 2. Click on... 3. See error..."
-            />
-          </label>
-          <label>
-            <span>Device / Environment</span>
-            <input
-              value={environment}
-              onChange={(e) => setEnvironment(e.target.value)}
-              placeholder="Browser, OS, version (e.g. Chrome 120, macOS)"
-            />
-          </label>
-          <label>
-            <span>Email (optional)</span>
-            <input
-              type="email"
-              value={reporterEmail}
-              onChange={(e) => setReporterEmail(e.target.value)}
-              placeholder="For follow-up questions"
-            />
-          </label>
+        <form className="saas-form" onSubmit={handleSubmit}>
+          <div className="saas-grid-2">
+            {/* Title Column */}
+            <div className="saas-field">
+              <label className="saas-label">
+                <span>Title *</span>
+              </label>
+              <input
+                type="text"
+                className="saas-input"
+                value={bugTitle}
+                onChange={(e) => setBugTitle(e.target.value)}
+                placeholder="Short, descriptive title of the bug"
+                required
+              />
+              <span className="saas-helper">
+                A clear title helps others understand the issue quickly.
+              </span>
+            </div>
+
+            {/* Severity Column */}
+            <div className="saas-field">
+              <label className="saas-label">
+                <span>Severity *</span>
+              </label>
+              <select
+                className="saas-select"
+                value={severity}
+                onChange={(e) => setSeverity(e.target.value)}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+              <span className="saas-helper">How severe is this issue?</span>
+            </div>
+
+            {/* Describe the Bug Column */}
+            <div className="saas-field full-width">
+              <label className="saas-label">
+                <span>Describe the bug *</span>
+                <span className="saas-char-counter">
+                  {bugDescription.length} / 1000
+                </span>
+              </label>
+              <textarea
+                className="saas-textarea"
+                rows={5}
+                maxLength={1000}
+                value={bugDescription}
+                onChange={(e) => setBugDescription(e.target.value)}
+                placeholder="What happened? What did you expect to happen?"
+                required
+              />
+            </div>
+
+            {/* Steps to reproduce Column */}
+            <div className="saas-field full-width">
+              <label className="saas-label">
+                <span>Steps to reproduce *</span>
+              </label>
+              <textarea
+                className="saas-textarea"
+                rows={4}
+                value={stepsToReproduce}
+                onChange={(e) => setStepsToReproduce(e.target.value)}
+                placeholder="1. Go to...  2. Click on...  3. See error..."
+                required
+              />
+              <span className="saas-helper">
+                List step-by-step instructions to reproduce the issue.
+              </span>
+            </div>
+
+            {/* Device / Environment Column */}
+            <div className="saas-field">
+              <label className="saas-label">
+                <span>Device / Environment</span>
+              </label>
+              <input
+                type="text"
+                className="saas-input"
+                value={environment}
+                onChange={(e) => setEnvironment(e.target.value)}
+                placeholder="Browser, OS, version (e.g. Chrome 122, Windows 11)"
+              />
+              <span className="saas-helper">Add details about your environment.</span>
+            </div>
+
+            {/* Email Column */}
+            <div className="saas-field">
+              <label className="saas-label">
+                <span>Email (optional)</span>
+              </label>
+              <input
+                type="email"
+                className="saas-input"
+                value={reporterEmail}
+                onChange={(e) => setReporterEmail(e.target.value)}
+                placeholder="name@example.com"
+              />
+              <span className="saas-helper">We'll reach out if we need more info.</span>
+            </div>
+
+            {/* Attachments Column */}
+            <div className="saas-field full-width">
+              <label className="saas-label">
+                <span>Attachments (optional)</span>
+              </label>
+              <div className="saas-upload-area">
+                <i className="fa-solid fa-cloud-arrow-up saas-upload-icon"></i>
+                <div className="saas-upload-title">
+                  Drag and drop files here, or <span>click to browse</span>
+                </div>
+                <div className="saas-upload-subtitle">
+                  Screenshots, recordings, or any relevant files (max 10MB each)
+                </div>
+              </div>
+            </div>
+          </div>
 
           {errorMsg && (
-            <p style={{ color: "#c0392b", fontSize: "14px" }}>{errorMsg}</p>
+            <p style={{ color: "#c0392b", fontSize: "14px", marginTop: "10px" }}>
+              {errorMsg}
+            </p>
           )}
 
-          <button
-            className="btn primary lg block"
-            type="submit"
-            disabled={submitting}
-          >
-            {submitting ? "Submitting..." : "Submit bug report"}
-          </button>
+          <div className="saas-actions">
+            <Link to="/" className="saas-btn secondary">
+              Cancel
+            </Link>
+
+            <button
+              className="saas-btn primary"
+              type="submit"
+              disabled={submitting}
+            >
+              <i className="fa-solid fa-bug"></i>
+              {submitting ? "Submitting..." : "Submit bug report"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
 }
+

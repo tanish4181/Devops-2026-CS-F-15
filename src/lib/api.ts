@@ -1,6 +1,6 @@
 import { auth } from "./auth";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 function getUserId(): string {
   const user = auth.currentUser;
@@ -181,6 +181,28 @@ export async function updateSubmission(
   });
 }
 
+export interface SettingsPayload {
+  newBugNotifications: boolean;
+  statusChangeNotifications: boolean;
+  notificationEmail: string;
+  applicationName: string;
+  supportEmail: string;
+  theme: "Light" | "Dark" | "System";
+  primaryColor: string;
+}
+
+export async function getSettings(): Promise<SettingsPayload> {
+  return request<SettingsPayload>("/settings");
+}
+
+export async function updateSettings(data: SettingsPayload): Promise<SettingsPayload> {
+  return request<SettingsPayload>("/settings", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function getStats(): Promise<Stats> {
   return request<Stats>("/stats");
 }
+

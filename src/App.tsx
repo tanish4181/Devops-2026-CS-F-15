@@ -7,7 +7,9 @@ import FeedbackForms from "./pages/admin/FeedbackForms";
 import BugDashboard from "./pages/admin/BugDashboard";
 import Submissions from "./pages/admin/Submissions";
 import Analytics from "./pages/admin/Analytics";
+import Settings from "./pages/admin/Settings";
 import FeedbackFormPage from "./pages/FeedbackFormPage";
+
 import Landing from "./pages/Landing";
 import { auth } from "./lib/auth";
 import { ThemeProvider } from "./lib/theme";
@@ -51,7 +53,9 @@ export default function App() {
           <Route path="bugs" element={<BugDashboard />} />
           <Route path="submissions" element={<Submissions />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ThemeProvider>
