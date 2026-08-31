@@ -3,4 +3,6 @@ dist
 *.local
 *.tsbuildinfo
 .env
+.env.local
+.vercel/
 PLAN.md
