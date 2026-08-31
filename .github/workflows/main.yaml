@@ -31,12 +31,12 @@ jobs:
 
       - name: Generate Weekly PDF Report
         run: |
-          python generate_report.py weekly
+          python generate_reports.py weekly
 
       - name: Move PDF to Weekly Reports Directory & Commit to Repository
         run: |
           mkdir -p weekly_reports
-          mv Weekly_Progress_Report_Form-3.pdf weekly_reports/
+          mv *_Weekly_Progress_Report_Form-3_*.pdf weekly_reports/
 
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
