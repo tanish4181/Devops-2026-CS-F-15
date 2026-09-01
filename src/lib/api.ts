@@ -57,10 +57,15 @@ export interface CreateBugPayload {
 }
 
 export interface SubmitFeedbackPayload {
+  title?: string;
+  bugTitle?: string;
+  bugType?: string;
+  severity?: string;
   bugDescription: string;
   stepsToReproduce?: string;
   environment?: string;
   reporterEmail?: string;
+  attachments?: string[];
 }
 
 export interface PublicForm {
@@ -69,6 +74,8 @@ export interface PublicForm {
   description: string;
   bugType: string;
   severity: string;
+  priority?: string;
+  environment?: string;
 }
 
 export interface Bug {
@@ -93,10 +100,14 @@ export interface Submission {
   _id: string;
   formId: { formId: string; title: string } | string;
   formTitle: string;
+  bugTitle?: string;
+  bugType?: string;
+  severity?: string;
   bugDescription: string;
   stepsToReproduce: string;
   environment: string;
   reporterEmail: string;
+  attachments?: string[];
   status: string;
   createdAt: string;
 }

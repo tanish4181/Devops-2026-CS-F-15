@@ -17,6 +17,18 @@ const submissionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    bugTitle: {
+      type: String,
+      default: "",
+    },
+    bugType: {
+      type: String,
+      default: "UI",
+    },
+    severity: {
+      type: String,
+      default: "Medium",
+    },
     bugDescription: {
       type: String,
       required: true,

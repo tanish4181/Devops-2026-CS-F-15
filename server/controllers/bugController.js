@@ -138,6 +138,8 @@ export async function getPublicForm(req, res) {
       description: form.description,
       bugType: form.bugType,
       severity: form.severity,
+      priority: form.priority,
+      environment: form.environment,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -147,8 +149,17 @@ export async function getPublicForm(req, res) {
 export async function submitFeedback(req, res) {
   try {
     const { formId } = req.params;
-    const { bugDescription, stepsToReproduce, environment, reporterEmail } =
-      req.body;
+    const {
+      title,
+      bugTitle,
+      severity,
+      bugType,
+      bugDescription,
+      stepsToReproduce,
+      environment,
+      reporterEmail,
+      attachments,
+    } = req.body;
 
     if (!bugDescription || !bugDescription.trim()) {
       return res
@@ -162,22 +173,30 @@ export async function submitFeedback(req, res) {
       return res.status(404).json({ error: "Form not found" });
     }
 
+    const resolvedBugTitle = (bugTitle || title || form.title || "Bug Report").trim();
+    const resolvedSeverity = severity || form.severity || "Medium";
+    const resolvedBugType = bugType || form.bugType || "UI";
+
     const submission = await Submission.create({
       userId: form.userId,
       formId: form._id,
       formTitle: form.title,
+      bugTitle: resolvedBugTitle,
+      bugType: resolvedBugType,
+      severity: resolvedSeverity,
       bugDescription: bugDescription.trim(),
       stepsToReproduce: stepsToReproduce || "",
       environment: environment || "",
       reporterEmail: reporterEmail || "",
+      attachments: Array.isArray(attachments) ? attachments : [],
       status: "New",
     });
 
     // Fire email notification asynchronously so failures do not block the request
     sendNewBugEmail({
       userId: form.userId,
-      title: form.title,
-      severity: form.severity || "Medium",
+      title: `${form.title} - ${resolvedBugTitle}`,
+      severity: resolvedSeverity,
       description: bugDescription.trim(),
       date: new Date().toLocaleString(),
     }).catch(err => console.error("Async email dispatch failed:", err));

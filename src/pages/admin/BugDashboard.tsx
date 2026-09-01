@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   getBugs,
   updateBug,
+  deleteBug,
   type Bug,
   type BugFilters,
 } from "../../lib/api";
@@ -10,6 +11,9 @@ import {
   SEVERITIES,
   PRIORITIES,
   BUG_STATUSES,
+  type BugType,
+  type Severity,
+  type Priority,
   type BugStatus,
 } from "../../lib/forms";
 
@@ -19,6 +23,9 @@ export default function BugDashboard() {
   const [filters, setFilters] = useState<BugFilters>({});
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [editingBug, setEditingBug] = useState<Bug | null>(null);
+  const [editTagInput, setEditTagInput] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const loadBugs = useCallback(async () => {
     try {
@@ -41,6 +48,56 @@ export default function BugDashboard() {
       setBugs((prev) => prev.map((b) => (b.formId === formId ? updated : b)));
     } catch (err) {
       console.error("Failed to update status:", err);
+    }
+  };
+
+  const startEditing = (bug: Bug) => {
+    setEditingBug({ ...bug });
+    setEditTagInput((bug.tags || []).join(", "));
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBug || !editingBug.title.trim() || savingEdit) return;
+
+    setSavingEdit(true);
+    try {
+      const updatedTags = editTagInput
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      const updated = await updateBug(editingBug.formId, {
+        title: editingBug.title.trim(),
+        description: editingBug.description || "",
+        bugType: editingBug.bugType,
+        severity: editingBug.severity,
+        priority: editingBug.priority,
+        status: editingBug.status,
+        assignee: editingBug.assignee || "Unassigned",
+        environment: editingBug.environment || "",
+        tags: updatedTags,
+      });
+
+      setBugs((prev) =>
+        prev.map((b) => (b.formId === editingBug.formId ? updated : b))
+      );
+      setEditingBug(null);
+    } catch (err) {
+      console.error("Failed to update bug:", err);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDelete = async (formId: string) => {
+    if (!window.confirm("Are you sure you want to delete this bug?")) return;
+    try {
+      await deleteBug(formId);
+      setBugs((prev) => prev.filter((b) => b.formId !== formId));
+      if (editingBug?.formId === formId) setEditingBug(null);
+    } catch (err) {
+      console.error("Failed to delete bug:", err);
     }
   };
 
@@ -100,7 +157,7 @@ export default function BugDashboard() {
       <div className="admin-head">
         <div>
           <h1>Bug Dashboard</h1>
-          <p>Track and manage all reported bugs.</p>
+          <p>Track, customize, and manage all reported bugs.</p>
         </div>
         <span className="count">{bugs.length} bugs</span>
       </div>
@@ -146,7 +203,7 @@ export default function BugDashboard() {
       <div className="filter-bar">
         <input
           type="search"
-          placeholder="Search bugs..."
+          placeholder="Search bugs by title, description, assignee..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -184,7 +241,7 @@ export default function BugDashboard() {
             }))
           }
         >
-          <option value="">All Priority</option>
+          <option value="">All Priorities</option>
           {PRIORITIES.map((p) => (
             <option key={p}>{p}</option>
           ))}
@@ -192,10 +249,7 @@ export default function BugDashboard() {
         <select
           value={filters.bugType || ""}
           onChange={(e) =>
-            setFilters((f) => ({
-              ...f,
-              bugType: e.target.value || undefined,
-            }))
+            setFilters((f) => ({ ...f, bugType: e.target.value || undefined }))
           }
         >
           <option value="">All Types</option>
@@ -252,6 +306,7 @@ export default function BugDashboard() {
                 <th>Type</th>
                 <th>Assignee</th>
                 <th>Updated</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -268,7 +323,13 @@ export default function BugDashboard() {
                     <code style={{ fontSize: "12px" }}>{b.formId}</code>
                   </td>
                   <td>
-                    <strong>{b.title}</strong>
+                    <strong
+                      style={{ cursor: "pointer", color: "var(--primary)" }}
+                      onClick={() => startEditing(b)}
+                      title="Click to edit bug details"
+                    >
+                      {b.title}
+                    </strong>
                     {b.tags.length > 0 && (
                       <div
                         style={{
@@ -315,10 +376,191 @@ export default function BugDashboard() {
                   <td style={{ fontSize: "12px", color: "var(--faint)" }}>
                     {new Date(b.updatedAt).toLocaleDateString()}
                   </td>
+                  <td>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        className="btn sm ghost"
+                        onClick={() => startEditing(b)}
+                        title="Edit Bug Title & Details"
+                      >
+                        <i className="fa-solid fa-pen-to-square"></i>
+                      </button>
+                      <button
+                        className="btn sm ghost linkish danger"
+                        onClick={() => handleDelete(b.formId)}
+                        title="Delete Bug"
+                      >
+                        <i className="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Edit Bug Modal */}
+      {editingBug && (
+        <div className="modal" onClick={() => setEditingBug(null)}>
+          <div
+            className="modal-card"
+            style={{ maxWidth: "600px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="modal-x"
+              onClick={() => setEditingBug(null)}
+            >
+              ✕
+            </button>
+            <span className="eyebrow">{editingBug.formId}</span>
+            <h2 style={{ marginBottom: "16px" }}>Edit Bug Details</h2>
+
+            <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <label>
+                <span style={{ fontWeight: 600, fontSize: "13px" }}>Title *</span>
+                <input
+                  value={editingBug.title}
+                  onChange={(e) =>
+                    setEditingBug({ ...editingBug, title: e.target.value })
+                  }
+                  required
+                />
+              </label>
+
+              <label>
+                <span style={{ fontWeight: 600, fontSize: "13px" }}>Description</span>
+                <textarea
+                  value={editingBug.description}
+                  onChange={(e) =>
+                    setEditingBug({ ...editingBug, description: e.target.value })
+                  }
+                  rows={3}
+                />
+              </label>
+
+              <div className="two-col">
+                <label>
+                  <span style={{ fontWeight: 600, fontSize: "13px" }}>Bug Type</span>
+                  <select
+                    value={editingBug.bugType}
+                    onChange={(e) =>
+                      setEditingBug({
+                        ...editingBug,
+                        bugType: e.target.value as BugType,
+                      })
+                    }
+                  >
+                    {BUG_TYPES.map((b) => (
+                      <option key={b}>{b}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span style={{ fontWeight: 600, fontSize: "13px" }}>Severity</span>
+                  <select
+                    value={editingBug.severity}
+                    onChange={(e) =>
+                      setEditingBug({
+                        ...editingBug,
+                        severity: e.target.value as Severity,
+                      })
+                    }
+                  >
+                    {SEVERITIES.map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="two-col">
+                <label>
+                  <span style={{ fontWeight: 600, fontSize: "13px" }}>Priority</span>
+                  <select
+                    value={editingBug.priority}
+                    onChange={(e) =>
+                      setEditingBug({
+                        ...editingBug,
+                        priority: e.target.value as Priority,
+                      })
+                    }
+                  >
+                    {PRIORITIES.map((p) => (
+                      <option key={p}>{p}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span style={{ fontWeight: 600, fontSize: "13px" }}>Status</span>
+                  <select
+                    value={editingBug.status}
+                    onChange={(e) =>
+                      setEditingBug({
+                        ...editingBug,
+                        status: e.target.value as BugStatus,
+                      })
+                    }
+                  >
+                    {BUG_STATUSES.map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="two-col">
+                <label>
+                  <span style={{ fontWeight: 600, fontSize: "13px" }}>Assignee / Team</span>
+                  <input
+                    value={editingBug.assignee}
+                    onChange={(e) =>
+                      setEditingBug({ ...editingBug, assignee: e.target.value })
+                    }
+                  />
+                </label>
+
+                <label>
+                  <span style={{ fontWeight: 600, fontSize: "13px" }}>Environment</span>
+                  <input
+                    value={editingBug.environment || ""}
+                    onChange={(e) =>
+                      setEditingBug({ ...editingBug, environment: e.target.value })
+                    }
+                  />
+                </label>
+              </div>
+
+              <label>
+                <span style={{ fontWeight: 600, fontSize: "13px" }}>Tags (comma separated)</span>
+                <input
+                  value={editTagInput}
+                  onChange={(e) => setEditTagInput(e.target.value)}
+                />
+              </label>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "12px" }}>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  onClick={() => setEditingBug(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn primary"
+                  disabled={savingEdit}
+                >
+                  {savingEdit ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </>

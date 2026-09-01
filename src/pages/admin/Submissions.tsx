@@ -122,16 +122,35 @@ export default function Submissions() {
             <div className="submission-card" key={s._id}>
               <div className="sub-top">
                 <div>
-                  <h3>{s.formTitle}</h3>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
+                    <h3>{s.bugTitle || s.formTitle}</h3>
+                    {s.bugTitle && s.formTitle && (
+                      <span className="badge" style={{ background: "var(--surface)", border: "1px solid var(--border)", fontSize: "11px" }}>
+                        via {s.formTitle}
+                      </span>
+                    )}
+                  </div>
                   <span className="sub-time">
                     {new Date(s.createdAt).toLocaleString()}
                   </span>
                 </div>
-                <span
-                  className={`badge status-${s.status.toLowerCase()}`}
-                >
-                  {s.status}
-                </span>
+                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  {s.severity && (
+                    <span className={`badge sev-${s.severity.toLowerCase()}`}>
+                      {s.severity}
+                    </span>
+                  )}
+                  {s.bugType && (
+                    <span className="badge badge-type">
+                      {s.bugType}
+                    </span>
+                  )}
+                  <span
+                    className={`badge status-${s.status.toLowerCase()}`}
+                  >
+                    {s.status}
+                  </span>
+                </div>
               </div>
 
               <p className="sub-desc">{s.bugDescription}</p>
@@ -139,7 +158,7 @@ export default function Submissions() {
               {expanded === s._id && (
                 <>
                   {s.stepsToReproduce && (
-                    <div>
+                    <div style={{ marginTop: "10px" }}>
                       <strong
                         style={{
                           fontSize: "12px",
@@ -154,13 +173,48 @@ export default function Submissions() {
                     </div>
                   )}
                   {s.environment && (
-                    <div style={{ fontSize: "13px", color: "var(--muted)" }}>
+                    <div style={{ fontSize: "13px", color: "var(--muted)", marginTop: "6px" }}>
                       <strong>Environment:</strong> {s.environment}
                     </div>
                   )}
                   {s.reporterEmail && (
-                    <div style={{ fontSize: "13px", color: "var(--muted)" }}>
-                      <strong>Email:</strong> {s.reporterEmail}
+                    <div style={{ fontSize: "13px", color: "var(--muted)", marginTop: "4px" }}>
+                      <strong>Reporter Email:</strong> {s.reporterEmail}
+                    </div>
+                  )}
+                  {s.attachments && s.attachments.length > 0 && (
+                    <div style={{ marginTop: "12px" }}>
+                      <strong
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        Attachments ({s.attachments.length}):
+                      </strong>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "6px" }}>
+                        {s.attachments.map((att, idx) => (
+                          att.startsWith("data:image/") ? (
+                            <a key={idx} href={att} target="_blank" rel="noreferrer" style={{ display: "inline-block" }}>
+                              <img
+                                src={att}
+                                alt={`attachment-${idx}`}
+                                style={{ width: "80px", height: "60px", objectFit: "cover", borderRadius: "6px", border: "1px solid var(--border)" }}
+                              />
+                            </a>
+                          ) : (
+                            <a
+                              key={idx}
+                              href={att}
+                              download={`attachment-${idx}`}
+                              className="badge"
+                              style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "6px 10px", background: "var(--surface)", border: "1px solid var(--border)" }}
+                            >
+                              <i className="fa-solid fa-paperclip"></i> Attachment {idx + 1}
+                            </a>
+                          )
+                        ))}
+                      </div>
                     </div>
                   )}
                 </>
