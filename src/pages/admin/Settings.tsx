@@ -1,242 +1,214 @@
-import { useState, useEffect } from "react";
-import { getSettings, updateSettings, type SettingsPayload } from "../../lib/api";
-import { getSession } from "../../lib/auth";
+import { useState } from "react";
+import { getSession, logout } from "../../lib/auth";
 import { useTheme } from "../../lib/theme";
 
+const ADMIN_EMAILS = [
+  {
+    email: "Tanish4181@gmail.com",
+    role: "Primary Administrator",
+    name: "Tanish",
+  },
+  {
+    email: "sajalsinghal62650@gmail.com",
+    role: "Administrator",
+    name: "Sajal Singhal",
+  },
+];
+
 export default function Settings() {
-  const { dark, toggle: toggleThemeMode } = useTheme();
-  const [sessionUser] = useState(getSession());
-  const [loading, setLoading] = useState(true);
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  const { dark, toggle } = useTheme();
+  const sessionUser = getSession();
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 
-  const [settings, setSettings] = useState<SettingsPayload>({
-    newBugNotifications: false,
-    statusChangeNotifications: false,
-    notificationEmail: "",
-    applicationName: "BugPilot",
-    supportEmail: "support@bugpilot.com",
-    theme: "System",
-    primaryColor: "#7c3aed",
-  });
+  const currentUserEmail = sessionUser?.email || "Tanish4181@gmail.com";
 
-  useEffect(() => {
-    getSettings()
-      .then((data) => {
-        // Fallback notification email to session user email if not set
-        const defaultNotificationEmail = data.notificationEmail || (sessionUser?.email || "");
-        setSettings({
-          ...data,
-          notificationEmail: defaultNotificationEmail,
-        });
-
-        // Apply primary color to root if present
-        if (data.primaryColor) {
-          document.documentElement.style.setProperty("--primary", data.primaryColor);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load settings:", err);
-        setErrorMsg("Failed to load settings. Please refresh the page.");
-      })
-      .finally(() => setLoading(false));
-  }, [sessionUser]);
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSuccessMsg("");
-    setErrorMsg("");
-
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (settings.notificationEmail && !emailRegex.test(settings.notificationEmail)) {
-      setErrorMsg("Notification email format is invalid.");
-      return;
-    }
-    if (settings.supportEmail && !emailRegex.test(settings.supportEmail)) {
-      setErrorMsg("Support email format is invalid.");
-      return;
-    }
-
-    try {
-      const updated = await updateSettings(settings);
-      setSettings(updated);
-      setSuccessMsg("Settings saved successfully");
-
-      // Apply appearance settings immediately
-      if (updated.theme) {
-        if (updated.theme === "Dark" && !dark) {
-          toggleThemeMode();
-        } else if (updated.theme === "Light" && dark) {
-          toggleThemeMode();
-        } else if (updated.theme === "System") {
-          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-          if (prefersDark !== dark) {
-            toggleThemeMode();
-          }
-        }
-      }
-
-      if (updated.primaryColor) {
-        document.documentElement.style.setProperty("--primary", updated.primaryColor);
-      }
-
-      setTimeout(() => setSuccessMsg(""), 3000);
-    } catch (err) {
-      setErrorMsg("Failed to save settings. Please try again.");
-    }
+  const handleCopy = (email: string) => {
+    navigator.clipboard.writeText(email);
+    setCopiedEmail(email);
+    setTimeout(() => setCopiedEmail(null), 2000);
   };
 
-  const updateField = <K extends keyof SettingsPayload>(key: K, value: SettingsPayload[K]) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+  const handleSignOut = async () => {
+    if (window.confirm("Are you sure you want to sign out of BugPilot?")) {
+      await logout();
+      window.location.href = "/#/auth";
+    }
   };
-
-  if (loading) {
-    return (
-      <div className="admin-loading">
-        <p>Loading settings...</p>
-      </div>
-    );
-  }
 
   return (
     <>
+      {/* Header */}
       <div className="admin-head">
         <div>
           <h1>Settings</h1>
-          <p>Manage your application preferences and account settings.</p>
+          <p>View your profile, administrator accounts, theme preferences, and session controls.</p>
         </div>
       </div>
 
-      {successMsg && (
-        <div className="settings-alert success">
-          <i className="fa-solid fa-circle-check"></i> {successMsg}
-        </div>
-      )}
-
-      {errorMsg && (
-        <div className="settings-alert error">
-          <i className="fa-solid fa-circle-exclamation"></i> {errorMsg}
-        </div>
-      )}
-
-      <div className="settings-grid">
-        <form onSubmit={handleSave} className="saas-form">
-          {/* Card 1: General Settings */}
-          <div className="saas-card saas-card-settings">
-            <div className="saas-card-header">
-              <h3>General Settings</h3>
-              <p className="saas-helper">Update your application name and contact email.</p>
+      <div className="simple-settings-container">
+        {/* 1. Profile Email ID */}
+        <div className="simple-settings-card">
+          <div className="simple-card-header">
+            <div className="simple-card-title">
+              <i className="fa-solid fa-circle-user"></i>
+              <h3>Your Profile</h3>
             </div>
-            <div className="saas-grid-2">
-              <div className="saas-field full-width">
-                <label className="saas-label">Application Name</label>
-                <input
-                  type="text"
-                  className="saas-input"
-                  value={settings.applicationName}
-                  onChange={(e) => updateField("applicationName", e.target.value)}
-                  placeholder="Application Name"
-                  required
-                />
-              </div>
-              <div className="saas-field full-width">
-                <label className="saas-label">Support Email</label>
-                <input
-                  type="email"
-                  className="saas-input"
-                  value={settings.supportEmail}
-                  onChange={(e) => updateField("supportEmail", e.target.value)}
-                  placeholder="support@bugpilot.com"
-                  required
-                />
-              </div>
-            </div>
+            <span className="badge badge-priority">Active Session</span>
           </div>
 
-          {/* Card 2: Notifications */}
-          <div className="saas-card saas-card-settings" style={{ marginTop: "28px" }}>
-            <div className="saas-card-header">
-              <h3>Notifications</h3>
-              <p className="saas-helper">Configure email notifications.</p>
+          <div className="simple-profile-box">
+            <div className="simple-avatar">
+              {currentUserEmail.charAt(0).toUpperCase()}
             </div>
-            <div className="saas-notification-item">
-              <div>
-                <h4 className="saas-notification-title">Email notifications for new bugs</h4>
-                <p className="saas-helper">Receive an email when a new bug is submitted.</p>
-              </div>
-              <div
-                className={`saas-toggle-switch ${settings.newBugNotifications ? "active" : ""}`}
-                onClick={() => updateField("newBugNotifications", !settings.newBugNotifications)}
-              >
-                <div className="saas-toggle-knob"></div>
-              </div>
-            </div>
-
-            <div className="saas-notification-item">
-              <div>
-                <h4 className="saas-notification-title">Email notifications for status changes</h4>
-                <p className="saas-helper">Receive an email when bug status is updated.</p>
-              </div>
-              <div
-                className={`saas-toggle-switch ${settings.statusChangeNotifications ? "active" : ""}`}
-                onClick={() => updateField("statusChangeNotifications", !settings.statusChangeNotifications)}
-              >
-                <div className="saas-toggle-knob"></div>
-              </div>
-            </div>
-
-            <div className="saas-field full-width" style={{ marginTop: "20px" }}>
-              <label className="saas-label">Notification Email</label>
-              <input
-                type="email"
-                className="saas-input"
-                value={settings.notificationEmail}
-                onChange={(e) => updateField("notificationEmail", e.target.value)}
-                placeholder="name@example.com"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Card 3: Appearance */}
-          <div className="saas-card saas-card-settings" style={{ marginTop: "28px" }}>
-            <div className="saas-card-header">
-              <h3>Appearance</h3>
-              <p className="saas-helper">Customize the appearance of the dashboard.</p>
-            </div>
-            <div className="saas-grid-2">
-              <div className="saas-field">
-                <label className="saas-label">Theme</label>
-                <select
-                  className="saas-select"
-                  value={settings.theme}
-                  onChange={(e) => updateField("theme", e.target.value as any)}
+            <div className="simple-profile-details">
+              <span className="simple-label">Logged In Email ID</span>
+              <div className="simple-email-row">
+                <strong className="simple-email-text">{currentUserEmail}</strong>
+                <button
+                  type="button"
+                  className="simple-copy-btn"
+                  onClick={() => handleCopy(currentUserEmail)}
+                  title="Copy email address"
                 >
-                  <option value="Light">Light</option>
-                  <option value="Dark">Dark</option>
-                  <option value="System">System</option>
-                </select>
+                  {copiedEmail === currentUserEmail ? "✓ Copied" : "Copy"}
+                </button>
               </div>
-              <div className="saas-field">
-                <label className="saas-label">Primary Color</label>
-                <input
-                  type="color"
-                  className="saas-input saas-input-color"
-                  style={{ height: "48px", padding: "4px" }}
-                  value={settings.primaryColor}
-                  onChange={(e) => updateField("primaryColor", e.target.value)}
-                />
-              </div>
+              <span className="simple-role-tag">
+                <i className="fa-solid fa-shield-halved"></i> Administrator
+              </span>
             </div>
           </div>
+        </div>
 
-          <div className="settings-action-btn-container" style={{ marginTop: "28px" }}>
-            <button type="submit" className="saas-btn primary">
-              Save Changes
+        {/* 2. Administrator Emails */}
+        <div className="simple-settings-card">
+          <div className="simple-card-header">
+            <div className="simple-card-title">
+              <i className="fa-solid fa-users-gear"></i>
+              <h3>Administrator Emails</h3>
+            </div>
+            <span className="badge badge-type">{ADMIN_EMAILS.length} Administrators</span>
+          </div>
+
+          <p className="simple-desc">
+            Authorized administrator accounts with full permissions to manage forms, bugs, and system settings.
+          </p>
+
+          <div className="simple-admin-list">
+            {ADMIN_EMAILS.map((admin) => (
+              <div key={admin.email} className="simple-admin-item">
+                <div className="simple-admin-avatar">
+                  <i className="fa-solid fa-user-shield"></i>
+                </div>
+                <div className="simple-admin-info">
+                  <div className="simple-admin-top">
+                    <h4>{admin.name}</h4>
+                    <span className="badge" style={{ background: "var(--primary-subtle)", color: "var(--primary)", fontSize: "11px" }}>
+                      {admin.role}
+                    </span>
+                  </div>
+                  <div className="simple-email-row">
+                    <code className="simple-code-email">{admin.email}</code>
+                    <button
+                      type="button"
+                      className="simple-copy-btn"
+                      onClick={() => handleCopy(admin.email)}
+                      title="Copy administrator email"
+                    >
+                      {copiedEmail === admin.email ? "✓ Copied" : "Copy"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 3. Dark and Light Mode Switch */}
+        <div className="simple-settings-card">
+          <div className="simple-card-header">
+            <div className="simple-card-title">
+              <i className="fa-solid fa-circle-half-stroke"></i>
+              <h3>Theme Preferences</h3>
+            </div>
+            <span className="badge" style={{ fontSize: "12px" }}>
+              {dark ? "🌙 Dark Mode" : "☀️ Light Mode"}
+            </span>
+          </div>
+
+          <p className="simple-desc">
+            Toggle between light and dark appearance for your workspace.
+          </p>
+
+          <div className="simple-theme-toggle-row">
+            <button
+              type="button"
+              className={`simple-theme-btn ${!dark ? "active" : ""}`}
+              onClick={() => {
+                if (dark) toggle();
+              }}
+            >
+              <div className="simple-theme-btn-icon light">
+                <i className="fa-solid fa-sun"></i>
+              </div>
+              <div className="simple-theme-btn-text">
+                <strong>Light Mode</strong>
+                <small>Clean, high-contrast daytime interface</small>
+              </div>
+              {!dark && (
+                <i className="fa-solid fa-circle-check simple-check-icon"></i>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className={`simple-theme-btn ${dark ? "active" : ""}`}
+              onClick={() => {
+                if (!dark) toggle();
+              }}
+            >
+              <div className="simple-theme-btn-icon dark">
+                <i className="fa-solid fa-moon"></i>
+              </div>
+              <div className="simple-theme-btn-text">
+                <strong>Dark Mode</strong>
+                <small>Sleek dark look, comfortable for low light</small>
+              </div>
+              {dark && (
+                <i className="fa-solid fa-circle-check simple-check-icon"></i>
+              )}
             </button>
           </div>
-        </form>
+        </div>
+
+        {/* 4. Sign Out Option */}
+        <div className="simple-settings-card simple-danger-card">
+          <div className="simple-card-header">
+            <div className="simple-card-title" style={{ color: "#ef4444" }}>
+              <i className="fa-solid fa-arrow-right-from-bracket"></i>
+              <h3>Account Session</h3>
+            </div>
+          </div>
+
+          <div className="simple-signout-row">
+            <div>
+              <strong style={{ fontSize: "14.5px", display: "block", color: "var(--text)" }}>
+                Sign Out of Your Account
+              </strong>
+              <span className="simple-desc" style={{ marginTop: "2px", display: "block" }}>
+                Safely disconnect and exit your current session on this browser.
+              </span>
+            </div>
+
+            <button
+              type="button"
+              className="simple-signout-btn"
+              onClick={handleSignOut}
+            >
+              <i className="fa-solid fa-right-from-bracket"></i> Sign Out
+            </button>
+          </div>
+        </div>
       </div>
     </>
   );
